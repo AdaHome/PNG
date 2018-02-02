@@ -1,0 +1,234 @@
+with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Strings.Fixed;
+with Ada.Integer_Text_IO;
+with Ada.Streams.Stream_IO;
+with Ada.Containers.Vectors;
+with Interfaces;
+with ztest;
+
+package body Home_Pictures.PNG.Puts is
+
+   package Unsigned_32_Text_IO is new Ada.Text_IO.Modular_IO (Unsigned_32);
+   package Unsigned_16_Text_IO is new Ada.Text_IO.Modular_IO (Unsigned_16);
+   package Unsigned_8_Text_IO is new Ada.Text_IO.Modular_IO (Unsigned_8);
+   package PNG_Bit_Depth_Text_IO is new Ada.Text_IO.Enumeration_IO (PNG_Bit_Depth);
+   package PNG_Color_Kind_Text_IO is new Ada.Text_IO.Enumeration_IO (PNG_Color_Kind);
+   package PNG_Interlace_Text_IO is new Ada.Text_IO.Enumeration_IO (PNG_Interlace);
+   package PNG_Filter_Method_Text_IO is new Ada.Text_IO.Enumeration_IO (PNG_Filter_Method);
+   package PNG_Compression_Text_IO is new Ada.Text_IO.Enumeration_IO (PNG_Compression);
+   package PNG_Chunk_Kind_Text_IO is new Ada.Text_IO.Enumeration_IO (PNG_Chunk_Kind);
+
+
+
+   procedure Put_Kind_Static_Expression is
+      function "<" (A, B : PNG_Chunk_Kind_String) return Boolean is
+      begin
+         return Create_Chunk_Kind_32 (A) < Create_Chunk_Kind_32 (B);
+      end "<";
+      package PNG_Chunk_Kind_String_Vectors is new Ada.Containers.Vectors (Natural, PNG_Chunk_Kind_String);
+      package PNG_Chunk_Kind_String_Vectors_Sorting is new PNG_Chunk_Kind_String_Vectors.Generic_Sorting;
+
+      Pre_Name : constant String := "PNG_Chunk_Kind";
+
+      List : PNG_Chunk_Kind_String_Vectors.Vector;
+
+   begin
+
+      for E of Chunk_Kind_List loop
+         PNG_Chunk_Kind_String_Vectors.Append (List, E);
+      end loop;
+
+
+      PNG_Chunk_Kind_String_Vectors_Sorting.Sort (List);
+
+      Put ("type ");
+      Put (Pre_Name);
+      Put (" is ");
+      New_Line;
+      Put_Line ("(");
+      for E of List loop
+         Put (Pre_Name);
+         Put ("_");
+         Put (E);
+         exit when E = List.Last_Element;
+         Put (", ");
+         New_Line;
+      end loop;
+      New_Line;
+      Put (");");
+
+      New_Line;
+
+      Put ("for ");
+      Put (Pre_Name);
+      Put (" use");
+      New_Line;
+      Put_Line ("(");
+      for E of List loop
+         Put (Pre_Name);
+         Put ("_");
+         Put (E);
+         Put (" =>");
+         Put (Create_Chunk_Kind_32 (E)'Img);
+         exit when E = List.Last_Element;
+         Put (",");
+         New_Line;
+      end loop;
+      New_Line;
+      Put_Line (");");
+   end;
+
+   procedure Put (Item : Stream_Element_Array) is
+      use Ada.Text_IO;
+   begin
+      for E of Item loop
+         Put (Character'Val (E));
+      end loop;
+   end Put;
+
+   procedure Put_Hex (Item : Stream_Element_Array) is
+      use Ada.Integer_Text_IO;
+   begin
+      for E of Item loop
+         Put (Standard_Output, Integer (E), 8, 16);
+      end loop;
+   end;
+
+
+
+   procedure Put_IDAT (Item : Stream_Element_Array) is
+      use ztest;
+      Z : Z_Native_Stream;
+      S : Z_Status;
+      O : Stream_Element_Array (1 .. 1000);
+   begin
+      Initialize_Inflate (Z, 15);
+      Set_Next_Input (Z, Item);
+      Set_Next_Output (Z, O);
+      S := Inflate (Z, Z_Flush_None);
+      Put_Line (S'Img);
+
+      New_Line;
+      Put_Hex (Item);
+      New_Line;
+
+      New_Line;
+      Put_Hex (O (1 .. Stream_Element_Offset (Z.Output_Total)));
+      New_Line;
+   end;
+
+   procedure Put_Column (Item : String) is
+      use Ada.Text_IO;
+      use Ada.Strings.Fixed;
+   begin
+      Put (Head (Item, 20));
+      Put ("| ");
+   end;
+
+   procedure Put_Line_Title (Item : String) is
+      use Ada.Text_IO;
+      use Ada.Strings.Fixed;
+   begin
+      Put_Line ("=== " & Item & " ===");
+   end;
+
+   procedure Put_Stream_Element_Array (Item : Stream_Element_Array; Width : Positive) is
+      use Ada.Strings.Fixed;
+      use Ada.Text_IO;
+   begin
+      Put ((Width - Item'Length) * " ");
+      for E of Item loop
+         Put (Character'Val (E));
+      end loop;
+   end;
+
+
+
+   procedure Put_Lines (Item : PNG_Information) is
+      use Ada.Text_IO;
+      use Ada.Integer_Text_IO;
+      use Ada.Strings.Fixed;
+      use Interfaces;
+      use Unsigned_32_Text_IO;
+      use Unsigned_16_Text_IO;
+      use Unsigned_8_Text_IO;
+      use PNG_Color_Kind_Text_IO;
+      use PNG_Bit_Depth_Text_IO;
+      use PNG_Interlace_Text_IO;
+      use PNG_Filter_Method_Text_IO;
+      use PNG_Compression_Text_IO;
+   begin
+
+      Ada.Integer_Text_IO.Default_Width := 20;
+      Unsigned_32_Text_IO.Default_Width := 20;
+      Unsigned_16_Text_IO.Default_Width := 20;
+      Unsigned_8_Text_IO.Default_Width := 20;
+      PNG_Color_Kind_Text_IO.Default_Width := 20;
+      PNG_Bit_Depth_Text_IO.Default_Width := 20;
+
+      Put_Column ("Chunk count ");
+      --Put (Item.Chunk_Count);
+      New_Line;
+
+      Put_Column ("Width ");
+      --Put (Item.Data_IHDR.Width);
+      New_Line;
+
+      Put_Column ("Height");
+      --Put (Item.Data_IHDR.Height);
+      New_Line;
+
+      Put_Column ("Bit_Depth");
+      --Put (Item.Data_IHDR.Bit_Depth);
+      New_Line;
+
+      Put_Column ("Color_Kind");
+      --Put (Item.Data_IHDR.Color_Kind);
+      New_Line;
+
+      Put_Column ("Compression");
+      --Put (Item.Data_IHDR.Compression);
+      New_Line;
+
+      Put_Column ("Filter");
+      --Put (Item.Data_IHDR.Filter_Method);
+      New_Line;
+
+      Put_Column ("Interlace");
+      --Put (Item.Data_IHDR.Interlace);
+      New_Line;
+
+      Put_Column ("Pixel_Depth_Bit");
+      --Put (Item.Pixel_Depth_Bit);
+      New_Line;
+
+      Put_Column ("Pixel_Depth_Byte");
+      --Put (Item.Pixel_Depth_Byte);
+      New_Line;
+
+      Put_Column ("Channel_Count");
+      --Put (Item.Channel_Count);
+      New_Line;
+
+      Put_Column ("Row_Size_Byte");
+      --Put (Item.Row_Size_Byte);
+      New_Line;
+
+      Put_Column ("Complete_Size_Byte");
+      --Put (Item.Complete_Size_Byte);
+      New_Line;
+
+      New_Line (3);
+   end;
+
+   procedure Put_Image (Item : Stream_Element_Array) is
+      use Ada.Text_IO;
+      use Unsigned_8_Text_IO;
+      use Ada.Integer_Text_IO;
+   begin
+      for E of Item loop
+         Put (Standard_Output, Integer (E), 0); Put (" ");
+      end loop;
+   end;
+
+end;
